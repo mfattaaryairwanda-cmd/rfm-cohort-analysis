@@ -1,100 +1,99 @@
-# Analisis Retensi Pelanggan dengan Cohort Analysis
+# RFM & Cohort Retention Analysis — Online Retail
 
-Analisis retensi pelanggan berbasis cohort menggunakan Python pada data transaksi ritel online tahun 2010. Proyek ini mengukur seberapa banyak pelanggan yang kembali bertransaksi setelah pembelian pertamanya, lalu menyajikannya dalam heatmap.
+Analisis perilaku pelanggan pada data transaksi *online retail* menggunakan pendekatan **Cohort Retention Analysis**, sebagai dasar untuk memahami pola *repeat purchase* dan loyalitas pelanggan dari waktu ke waktu.
 
-## Tujuan
+## 📌 Deskripsi Proyek
 
-- Mengukur tingkat retensi pelanggan dari bulan ke bulan.
-- Membandingkan kualitas pelanggan antar cohort (kelompok bulan pertama order).
-- Menemukan pola musiman dan titik kebocoran pelanggan untuk dasar rekomendasi bisnis.
+Proyek ini bertujuan untuk menganalisis retensi pelanggan berdasarkan bulan akuisisi (cohort) pada data transaksi ritel online tahun 2010. Analisis ini membantu menjawab pertanyaan bisnis seperti:
 
-## Dataset
+- Seberapa besar pelanggan yang kembali bertransaksi setelah pembelian pertama?
+- Apakah kualitas pelanggan baru berubah sepanjang tahun?
+- Apakah ada pola musiman dalam perilaku pembelian ulang?
 
-- File: `Online Retail Data.csv` (transaksi ritel online, Januari sampai Desember 2010).
-- Ukuran data mentah: 461.773 baris, 7 kolom.
-- Kolom: `order_id`, `product_code`, `product_name`, `quantity`, `order_date`, `price`, `customer_id`.
-- - Sumber data: dataset pembelajaran dari e-learning MySkill (myskill.id), berisi data transaksi ritel online tahun 2010.
+## 🗂️ Dataset
 
-## Metodologi
+Dataset berupa data transaksi ritel online dengan kolom:
 
-**1. Data cleaning**
-- Mengubah `order_date` ke format datetime dan membuat kolom `year_month`.
-- Menghapus baris tanpa `customer_id` dan tanpa `product_name`.
-- Membuang produk uji coba (kata "test" pada kode atau nama produk).
-- Membuat kolom `order_status` dari awalan `order_id`, serta kolom `amount` (quantity × price).
-- Mengubah `quantity` negatif menjadi positif dan menghapus `price` negatif.
-- Menyeragamkan `product_name` untuk setiap `product_code` dengan nama yang paling sering muncul.
-- Menghapus outlier pada `quantity` dan `amount` dengan z-score (|z| < 3).
-- Hasil akhir: 358.482 baris.
+| Kolom | Deskripsi |
+|---|---|
+| `order_id` | ID unik transaksi (diawali `C` jika dibatalkan) |
+| `product_code` | Kode produk |
+| `product_name` | Nama produk |
+| `quantity` | Jumlah item yang dibeli |
+| `order_date` | Tanggal & waktu transaksi |
+| `price` | Harga satuan produk |
+| `customer_id` | ID unik pelanggan |
 
-**2. Pembentukan retention cohort**
-- Mengagregasi jumlah order per pelanggan per bulan.
-- Menentukan cohort, yaitu bulan pertama pelanggan bertransaksi.
-- Menghitung `period_num`, yaitu jarak bulan dari order pertama (bulan pertama = 1).
-- Membuat tabel pivot jumlah pelanggan unik per cohort dan periode.
-- Membagi tiap nilai dengan ukuran cohort untuk mendapat retention rate.
-- Menampilkan hasilnya dalam heatmap (seaborn).
+## 🧹 Data Cleaning
 
-## Hasil
+Beberapa langkah pembersihan data yang dilakukan:
+- Konversi `order_date` ke format datetime
+- Menghapus baris tanpa `customer_id` dan `product_name`
+- Menyeragamkan `product_name` (huruf kecil, produk duplikat digabung berdasarkan nama paling sering muncul)
+- Menghapus data uji coba (produk dengan kata "test")
+- Menandai status pesanan (`delivered` / `cancelled`) berdasarkan awalan `order_id`
+- Menghitung kolom `amount` = `quantity` × `price`
+- Menghapus outlier menggunakan Z-score pada `quantity` dan `amount`
 
-![User Retention Cohort](images/retention_heatmap.png)
+## ⚙️ Metodologi
 
-*Simpan gambar heatmap dari notebook ke folder `images/` dengan nama di atas.*
+1. **Agregasi transaksi bulanan per pelanggan**
+2. **Penentuan cohort**: bulan pertama kali pelanggan bertransaksi
+3. **Perhitungan `period_num`**: jarak bulan antara transaksi dengan bulan cohort
+4. **Pivot table & retention rate**: proporsi pelanggan yang kembali di setiap periode dibanding ukuran cohort awal
+5. **Visualisasi**: heatmap retention rate per cohort menggunakan `seaborn`
 
-### Temuan utama
+## 📊 Temuan Utama
 
-- **Retensi rendah.** Pada bulan ke-2 hanya 20% hingga 39% pelanggan yang kembali bertransaksi, sehingga mayoritas pelanggan hanya membeli sekali.
-- **Kualitas cohort menurun sepanjang tahun.** Cohort Januari paling loyal (retensi berkisar 38% hingga 47%), sedangkan cohort pertengahan hingga akhir tahun sekitar 20% pada bulan ke-2.
-- **Efek musiman November.** Retensi naik di banyak cohort pada November 2010, kemungkinan karena musim belanja akhir tahun.
-- **Penurunan Desember.** Kemungkinan besar karena data Desember belum lengkap (transaksi terakhir pada data bersih tercatat 23 Desember 2010), bukan karena pelanggan berhenti.
+![Retensi Bulan ke-2 per Cohort](images/barchart.png)
 
-### Rekomendasi
+- **Churn tinggi pasca pembelian pertama** — hanya 20–39% pelanggan kembali bertransaksi di bulan ke-2, mayoritas hanya membeli satu kali.
+- **Kualitas cohort menurun** sepanjang paruh pertama tahun: cohort Januari paling loyal (retensi stabil 35–47%), sementara cohort Mei–Juni paling lemah (~20%), lalu sedikit membaik di September–Oktober (~28%).
+- **Efek musiman November** — retensi naik hampir di semua cohort pada bulan November, kemungkinan terkait musim belanja akhir tahun.
+- **Penurunan di Desember** kemungkinan besar artefak data (data transaksi hanya tersedia sampai 23 Desember), bukan sinyal bisnis yang sebenarnya.
 
-- Fokuskan program retensi (voucher pembelian kedua, email tindak lanjut) pada 30 hari pertama setelah pembelian pertama.
-- Telusuri faktor yang membuat cohort Januari lebih loyal, lalu replikasi.
-- Siapkan kampanye menjelang November untuk memanfaatkan momentum musiman.
-- Pastikan kelengkapan data Desember sebelum mengambil keputusan.
+## 💡 Rekomendasi
 
-## Keterbatasan
+- Fokuskan program retensi (voucher pembelian kedua, email follow-up) pada **30 hari pertama** setelah pembelian pertama.
+- Telusuri faktor yang membuat cohort Januari lebih loyal, lalu replikasi ke cohort lainnya.
+- Siapkan kampanye dan kapasitas layanan menjelang **November** untuk memanfaatkan momentum musiman.
+- Verifikasi kelengkapan data Desember sebelum menjadikannya dasar pengambilan keputusan.
+- Kembangkan analisis lebih lanjut dengan **skoring RFM (Recency, Frequency, Monetary)** untuk segmentasi pelanggan (Champions, Loyal, At Risk, Lost).
 
-- Analisis bersifat deskriptif, sehingga penyebab pasti belum dapat disimpulkan. Data sumber akuisisi dan riwayat promosi tidak tersedia.
-- Cohort kecil (misalnya Desember, 66 pelanggan) mudah berfluktuasi.
-- Sel kosong pada heatmap berarti data belum tersedia, bukan retensi 0%.
-- Retensi dihitung dari pelanggan yang memiliki `customer_id`, sehingga transaksi tanpa ID tidak ikut dianalisis.
+## 🛠️ Tools & Library
 
-## Cara Menjalankan
+- Python
+- Pandas, NumPy
+- SciPy (deteksi outlier)
+- Matplotlib, Seaborn (visualisasi)
 
-1. Clone repository ini.
+## 🚀 Cara Menjalankan
+
+```bash
+# clone repository
+git clone <repo-url>
+cd <repo-folder>
+
+# install dependencies
+pip install pandas numpy scipy matplotlib seaborn
+
+# jalankan notebook
+jupyter notebook RFM-Analysis.ipynb
 ```
-   git clone https://github.com/mfattaaryairwanda-cmd/retention-cohort-analysis.git
-cd retention-cohort-analysis
-```
-2. Pasang library yang dibutuhkan.
-```
-   pip install pandas numpy scipy matplotlib seaborn jupyter
-```
-3. Letakkan file data di folder `data/`, lalu ubah path pada sel pertama notebook, misalnya:
-```python
-   df = pd.read_csv("data/Online Retail Data.csv")
-```
-4. Jalankan `Retention_Analysis.ipynb` dengan Jupyter Notebook.
 
-## Struktur Repository
+> Catatan: sesuaikan path dataset pada baris `pd.read_csv(...)` dengan lokasi file dataset di komputer Anda.
+
+## 📁 Struktur File
 
 ```
-.
-├── Retention_Analysis.ipynb
-├── README.md
 ├── data/
-│   └── Online Retail Data.csv
-└── images/
-    └── retention_heatmap.png
+│   └── Online Retail Data.csv   # dataset transaksi
+├── images/
+│   └── barchart.png             # visualisasi retensi bulan ke-2 per cohort
+├── RFM-Analysis.ipynb            # notebook analisis utama
+└── README.md                     # dokumentasi proyek
 ```
 
-## Tools
+## ✍️ Author
 
-Python, pandas, NumPy, SciPy, Matplotlib, Seaborn, Jupyter Notebook.
-
-## Penulis
-
-Fatta, Program Studi Statistika, Universitas Negeri Padang.
+M. Fatta Arya Irwanda
